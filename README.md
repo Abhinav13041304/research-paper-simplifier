@@ -27,4 +27,3 @@ analogies, and knowledge graphs.
 
 ## Local Setup
 Coming soon as development progresses.
-```
