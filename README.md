@@ -28,16 +28,3 @@ analogies, and knowledge graphs.
 ## Local Setup
 Coming soon as development progresses.
 ```
-
-5. Scroll down → **"Commit changes"** → **"Commit directly to main"** → **"Commit changes"**
-
-This is also today's commit — streak continues. 🟩
-
----
-
-**Step 3 — Add topics/tags to the repo**
-
-1. On the repo page, click the **gear icon** next to "About" (top right of the about section)
-2. In the **Topics** field add these one by one:
-```
-ai nlp research-tool python react flask academic papers langchain
