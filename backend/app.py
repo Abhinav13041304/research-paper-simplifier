@@ -274,6 +274,7 @@ def upload_pdf():
     concept_diagram = generate_concept_diagram(text)
     qa = generate_qa(text)
     difficulty = get_difficulty_score(text)
+    diagram_data = generate_diagram_data(text)
 
     return jsonify({
         "summary": summary,
@@ -285,7 +286,8 @@ def upload_pdf():
         "qa": qa,
         "difficulty_score": difficulty,
         "word_count": len(text.split()),
-        "depth": depth
+        "depth": depth,
+        "diagram_data": diagram_data,
     })
 
 @app.route("/explain-concept", methods=["POST"])
@@ -307,6 +309,99 @@ Do not use markdown formatting."""
     )
     
     return jsonify({"explanation": explanation})
+
+def generate_diagram_data(text):
+    result = call_groq(
+        f"""Analyse this document and extract structured data for diagrams.
+
+Return ONLY a valid JSON object in exactly this format, no extra text:
+{{
+  "main_topic": "Main topic name",
+  "subtopics": [
+    {{
+      "name": "Subtopic 1",
+      "color": "#6c63ff",
+      "children": ["Sub-concept 1", "Sub-concept 2", "Sub-concept 3"]
+    }},
+    {{
+      "name": "Subtopic 2", 
+      "color": "#ff6584",
+      "children": ["Sub-concept 1", "Sub-concept 2"]
+    }},
+    {{
+      "name": "Subtopic 3",
+      "color": "#00bcd4",
+      "children": ["Sub-concept 1", "Sub-concept 2"]
+    }},
+    {{
+      "name": "Subtopic 4",
+      "color": "#f9a825",
+      "children": ["Sub-concept 1", "Sub-concept 2"]
+    }}
+  ],
+  "process_steps": [
+    {{"step": 1, "title": "Step 1", "description": "What happens", "color": "#6c63ff"}},
+    {{"step": 2, "title": "Step 2", "description": "What happens", "color": "#ff6584"}},
+    {{"step": 3, "title": "Step 3", "description": "What happens", "color": "#00bcd4"}},
+    {{"step": 4, "title": "Step 4", "description": "What happens", "color": "#f9a825"}},
+    {{"step": 5, "title": "Step 5", "description": "What happens", "color": "#4caf50"}}
+  ],
+  "image_prompts": [
+    "detailed technical illustration of [main topic], educational diagram style, colorful, clear labels",
+    "visual representation of [key concept from document], infographic style, professional, colorful"
+  ]
+}}
+
+Base everything on the actual content of this document.
+
+Document:\n{text[:4000]}"""
+    )
+    try:
+        import json
+        cleaned = result.strip()
+        if "```" in cleaned:
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        return json.loads(cleaned.strip())
+    except Exception:
+        return {
+            "main_topic": "Document",
+            "subtopics": [],
+            "process_steps": [],
+            "image_prompts": ["educational diagram", "technical illustration"]
+        }
+
+
+def generate_extra_image_prompts(text):
+    result = call_groq(
+        f"""Generate 2 more image generation prompts for visual diagrams about this document's content.
+
+Return ONLY a JSON array, no extra text:
+[
+  "detailed prompt 1 for an educational illustration",
+  "detailed prompt 2 for a different aspect of the topic"
+]
+
+Document:\n{text[:2000]}"""
+    )
+    try:
+        import json
+        cleaned = result.strip()
+        if "```" in cleaned:
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        return json.loads(cleaned.strip())
+    except Exception:
+        return ["educational diagram", "technical illustration"]
+
+@app.route("/more-diagrams", methods=["POST"])
+def more_diagrams():
+    data = request.get_json()
+    text = data.get("text", "")
+    prompts = generate_extra_image_prompts(text)
+    return jsonify({"prompts": prompts})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

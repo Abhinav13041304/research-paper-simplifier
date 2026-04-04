@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import mermaid from "mermaid";
 import "./App.css";
+import DiagramsTab from "./DiagramsTab";
 
 mermaid.initialize({ startOnLoad: false, theme: "dark", flowchart: { curve: "basis" } });
 
@@ -22,8 +23,7 @@ function MermaidDiagram({ chart, id }) {
 
 const TABS = [
   { id: "Summary", icon: "📋" },
-  { id: "Flowchart", icon: "🔄" },
-  { id: "Concept Map", icon: "🗺" },
+  { id: "Diagrams", icon: "🎨" },
   { id: "Q&A", icon: "❓" },
   { id: "Concepts", icon: "💡" },
 ];
@@ -384,22 +384,8 @@ export default function App() {
                       </div>
                     )}
 
-                    {activeTab === "Flowchart" && (
-                      <div className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
-                        <h3 style={{ margin: "0 0 16px", fontSize: "14px", color: accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>Methodology Flowchart</h3>
-                        <div style={{ background: surface2, borderRadius: "12px", padding: "24px" }}>
-                          <MermaidDiagram chart={result.flowchart} id="flowchart" />
-                        </div>
-                      </div>
-                    )}
-
-                    {activeTab === "Concept Map" && (
-                      <div className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
-                        <h3 style={{ margin: "0 0 16px", fontSize: "14px", color: "#00bcd4", textTransform: "uppercase", letterSpacing: "0.05em" }}>Concept Relationship Map</h3>
-                        <div style={{ background: surface2, borderRadius: "12px", padding: "24px" }}>
-                          <MermaidDiagram chart={result.concept_diagram} id="concept" />
-                        </div>
-                      </div>
+                    {activeTab === "Diagrams" && (
+                      <DiagramsTab result={result} darkMode={darkMode} />
                     )}
 
                     {activeTab === "Q&A" && result.qa && (
