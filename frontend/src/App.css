@@ -208,3 +208,63 @@ body {
   0% { opacity: 0.5; }
   100% { opacity: 1; }
 }
+
+/* Hero Title Animation Only */
+.hero-title {
+  animation: titleGlow 4s ease-in-out infinite alternate;
+  /* We removed font-size and background here so it stays as you like it in App.js */
+}
+
+@keyframes titleGlow {
+  0% { filter: drop-shadow(0 0 5px rgba(108, 99, 255, 0.2)); }
+  100% { filter: drop-shadow(0 0 15px rgba(108, 99, 255, 0.4)); }
+}
+/* Empty State Pulse Effect */
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0px; /* Reduce this if it's still too low */
+  margin-bottom: 0;   /* Keep it tight to the upload zone */
+}
+
+.pulse-wrapper {
+  position: relative;
+  width: 100px;  /* Slightly smaller to save space */
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #6c63ff;
+  border-radius: 50%;
+  animation: ripple 3s linear infinite;
+  opacity: 0;
+}
+
+.pulse-ring:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.pulse-ring:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes ripple {
+  0% { transform: scale(0.5); opacity: 0; }
+  30% { opacity: 0.4; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.empty-icon {
+  font-size: 54px;
+  z-index: 2;
+  filter: drop-shadow(0 0 10px #6c63ff66);
+}

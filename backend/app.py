@@ -34,13 +34,70 @@ def call_groq(prompt):
 
 
 def summarise_text(text, depth="student"):
-    depth_prompts = {
-        "quick": "Explain this document in simple terms in 3-4 sentences for someone with no technical background.",
-        "student": "Explain this document clearly for a student. Cover what topic it addresses, the key ideas, and what the main takeaways are.",
-        "researcher": "Provide a detailed technical summary of this document covering methodology, key contributions, results, and limitations if applicable."
-    }
-    prompt = depth_prompts.get(depth, depth_prompts["student"])
-    return call_groq(f"{prompt}\n\nDocument content:\n{text[:4000]}")
+    if depth == "quick":
+        return call_groq(
+            f"Explain this document in simple terms in 3-4 sentences for someone with no technical background.\n\nDocument:\n{text[:2000]}"
+        )
+
+    elif depth == "student":
+        return call_groq(
+            f"""You are an expert teacher. Analyse this entire document thoroughly and provide a comprehensive section-by-section explanation for a university student.
+
+IMPORTANT: Each section must have substantial content — at least 4-6 sentences of explanation plus detailed bullet points. Do not rush or summarise too briefly. The student is using this to study, not just get a quick overview.
+
+Format each section exactly like this:
+
+**Section Title**
+Write 4-6 sentences explaining this section in depth. Cover what it means, why it matters, how it works, and connect it to other concepts in the document. Use clear, student-friendly language but do not oversimplify.
+
+* Detailed point 1 with explanation
+* Detailed point 2 with explanation  
+* Detailed point 3 with explanation
+* Detailed point 4 with explanation
+
+Identify and cover ALL major sections and subtopics present in the document including:
+- Introduction and background
+- Every major concept or topic discussed
+- Methods or approaches explained
+- Results, findings, or conclusions
+- Real world applications if mentioned
+
+Do not skip any major topic. If the document has 10 topics, cover all 10 in detail.
+
+Document:\n{text[:7000]}"""
+        )
+
+    elif depth == "researcher":
+        return call_groq(
+            f"""You are an expert academic researcher. Analyse this document in full technical depth and provide an exhaustive section-by-section breakdown.
+
+IMPORTANT: Each section must be thoroughly detailed — at least 6-8 sentences of technical analysis plus comprehensive bullet points. Cover every nuance, assumption, limitation, and implication. This is for a researcher who needs complete understanding.
+
+Format each section exactly like this:
+
+**Section Title**
+Write 6-8 sentences of deep technical analysis. Cover the theoretical foundations, methodological choices, mathematical or algorithmic details, comparisons with related work, and critical evaluation. Be precise and use domain-specific terminology.
+
+* Technical detail 1 with full explanation
+* Technical detail 2 with full explanation
+* Technical detail 3 with full explanation
+* Technical detail 4 with full explanation
+* Technical detail 5 with full explanation
+
+Identify and cover ALL sections and subtopics in the document including:
+- Abstract and research objectives
+- Literature review and background theory
+- Every methodology, algorithm, or approach in detail
+- Experimental setup and datasets if applicable
+- Results with quantitative analysis
+- Limitations and assumptions
+- Conclusions and future research directions
+- Critical evaluation of the work
+
+Do not skip any section. Provide maximum depth for every topic covered.
+
+Document:\n{text[:8000]}"""
+        )
 
 
 def extract_concepts(text):
@@ -128,28 +185,28 @@ Document:\n{text[:3000]}"""
 
 def generate_qa(text):
     result = call_groq(
-        f"""Generate exam questions from this study material at three difficulty levels.
+        f"""Generate exam questions with answers from this study material.
 
 Return ONLY a valid JSON object in exactly this format, no extra text:
 {{
-  "one_mark": [
-    "Question 1?",
-    "Question 2?",
-    "Question 3?"
+  "two_mark": [
+    {{"question": "Question 1?", "answer": "Answer 1."}},
+    {{"question": "Question 2?", "answer": "Answer 2."}},
+    {{"question": "Question 3?", "answer": "Answer 3."}}
   ],
-  "five_mark": [
-    "Question 1?",
-    "Question 2?"
+  "four_mark": [
+    {{"question": "Question 1?", "answer": "Answer 1."}},
+    {{"question": "Question 2?", "answer": "Answer 2."}}
   ],
-  "ten_mark": [
-    "Question 1?",
-    "Question 2?"
+  "six_mark": [
+    {{"question": "Question 1?", "answer": "Answer 1."}},
+    {{"question": "Question 2?", "answer": "Answer 2."}}
   ]
 }}
 
-one_mark: Simple definition or fact-based questions (3 questions)
-five_mark: Explanation or comparison questions (2 questions)
-ten_mark: Analysis or detailed discussion questions (2 questions)
+two_mark: Simple definition or fact-based questions with short answers (3 questions) 2 marks worthy
+four_mark: Explain concepts, processes, or comparisons, Explanation questions with medium length answers (2 questions) 4 marks worthy
+six_mark: Deep analysis, architecture, or critical discussion, Analysis or detailed discussion questions with detailed and long answers (2 questions) 6 marks worthy
 
 Document:\n{text[:3000]}"""
     )
@@ -163,9 +220,9 @@ Document:\n{text[:3000]}"""
         return json.loads(cleaned.strip())
     except Exception:
         return {
-            "one_mark": ["Could not generate questions. Please try again."],
-            "five_mark": ["Could not generate questions. Please try again."],
-            "ten_mark": ["Could not generate questions. Please try again."]
+            "two_mark": [{"question": "Could not generate questions.", "answer": "Please try again."}],
+            "five_mark": [{"question": "Could not generate questions.", "answer": "Please try again."}],
+            "eight_mark": [{"question": "Could not generate questions.", "answer": "Please try again."}]
         }
 
 
@@ -231,6 +288,25 @@ def upload_pdf():
         "depth": depth
     })
 
+@app.route("/explain-concept", methods=["POST"])
+def explain_concept():
+    data = request.get_json()
+    concept = data.get("concept", "")
+    context = data.get("context", "")
+    
+    if not concept:
+        return jsonify({"error": "No concept provided"}), 400
+    
+    explanation = call_groq(
+        f"""Explain the concept "{concept}" clearly and concisely for a student.
+        
+Context from the document they are reading: {context[:500]}
+
+Keep the explanation to 3-4 sentences maximum. Be specific and use simple language.
+Do not use markdown formatting."""
+    )
+    
+    return jsonify({"explanation": explanation})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

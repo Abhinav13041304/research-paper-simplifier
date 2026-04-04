@@ -1,3 +1,4 @@
+import ParticleBackground from "./ParticleBackground";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import mermaid from "mermaid";
@@ -48,6 +49,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("Summary");
   const [darkMode, setDarkMode] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [conceptExplanation, setConceptExplanation] = useState({});
+  const [loadingConcept, setLoadingConcept] = useState(null);
   const fileInputRef = useRef(null);
 
   const bg = darkMode ? "#0a0a1a" : "#f5f5ff";
@@ -140,6 +143,7 @@ export default function App() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           style={{ minHeight: "100vh", background: bg, color: text, transition: "all 0.3s" }}
         >
+          <ParticleBackground darkMode={darkMode} />
           {/* Header */}
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -147,9 +151,23 @@ export default function App() {
             style={{ borderBottom: `1px solid ${border}`, padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", backdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 100, background: darkMode ? "#0a0a1acc" : "#f5f5ffcc" }}
           >
             <div>
-              <h1 style={{ margin: 0, fontSize: "26px", fontWeight: "800", background: "linear-gradient(135deg, #6c63ff, #00bcd4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                PaperLens
-              </h1>
+              <motion.h1
+  initial={{ opacity: 0, y: -10, filter: "blur(10px)" }} // Added blur
+  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}    // Clear on load
+  transition={{ duration: 1.2, ease: "easeOut" }}
+  className="hero-title" // This connects it to the CSS glow
+  style={{ 
+    margin: 0, 
+    fontSize: "36px", // Your preferred size
+    fontWeight: "900", 
+    background: "linear-gradient(135deg, #6c63ff, #00bcd4)", 
+    WebkitBackgroundClip: "text", 
+    WebkitTextFillColor: "transparent", 
+    letterSpacing: "-0.5px" 
+  }}
+>
+  PaperLens
+</motion.h1>
               <p style={{ margin: "2px 0 0", fontSize: "12px", color: textMuted }}>
                 From research papers to textbooks — understand anything instantly
               </p>
@@ -164,7 +182,7 @@ export default function App() {
             </motion.button>
           </motion.div>
 
-          <div style={{ maxWidth: "860px", margin: "0 auto", padding: "36px 20px" }}>
+          <div style={{ maxWidth: "860px", margin: "0 auto", padding: "36px 20px", position: "relative", zIndex: 1 }}>
 
             {/* Upload zone */}
             <motion.div
@@ -309,7 +327,47 @@ export default function App() {
                       <div className="stagger-children" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                         <div className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
                           <h3 style={{ margin: "0 0 14px", fontSize: "14px", color: accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>Summary</h3>
-                          <p style={{ lineHeight: "1.85", color: text, whiteSpace: "pre-wrap", margin: 0, fontSize: "14px" }}>{result.summary}</p>
+                          <div style={{ lineHeight: "1.85", color: text, margin: 0, fontSize: "14px" }}>
+                            {result.summary.split("\n").map((line, i) => {
+                              if (!line.trim()) return null;
+                              
+                              const renderBold = (text) =>
+                                text.split(/\*\*(.*?)\*\*/g).map((part, j) =>
+                                  j % 2 === 1
+                                    ? <strong key={j} style={{ fontWeight: "700" }}>{part}</strong>
+                                    : part
+                                );
+
+                              const trimmed = line.trim();
+                              const isBullet = trimmed.startsWith("* ") || trimmed.startsWith("- ");
+                              const isNumbered = /^\d+\./.test(trimmed);
+                              const isHeading = trimmed.endsWith(":") && !trimmed.includes(" ") === false && trimmed.length < 40;
+
+                              if (isBullet) {
+                                const content = trimmed.replace(/^[\*\-] /, "");
+                                return (
+                                  <div key={i} style={{ display: "flex", gap: "8px", margin: "4px 0 4px 24px" }}>
+                                    <span style={{ color: "#6c63ff", flexShrink: 0, marginTop: "2px" }}>•</span>
+                                    <span>{renderBold(content)}</span>
+                                  </div>
+                                );
+                              }
+
+                              if (isNumbered) {
+                                return (
+                                  <p key={i} style={{ margin: "10px 0 4px 0", fontWeight: "500" }}>
+                                    {renderBold(trimmed)}
+                                  </p>
+                                );
+                              }
+
+                              return (
+                                <p key={i} style={{ margin: "8px 0" }}>
+                                  {renderBold(trimmed)}
+                                </p>
+                              );
+                            })}
+                          </div>
                         </div>
                         <div className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
                           <h3 style={{ margin: "0 0 14px", fontSize: "14px", color: "#f9a825", textTransform: "uppercase", letterSpacing: "0.05em" }}>Real-world analogy</h3>
@@ -347,64 +405,123 @@ export default function App() {
                     {activeTab === "Q&A" && result.qa && (
                       <div className="stagger-children" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                         {[
-                          { key: "one_mark", label: "1 Mark", color: "#4caf50", desc: "Definition & fact-based" },
-                          { key: "five_mark", label: "5 Mark", color: "#f9a825", desc: "Explanation & comparison" },
-                          { key: "ten_mark", label: "10 Mark", color: "#ff6584", desc: "Analysis & discussion" },
+                          { key: "two_mark", label: "2 Mark", color: "#4caf50", desc: "Definition & fact-based" },
+                          { key: "four_mark", label: "4 Mark", color: "#f9a825", desc: "Explanation & comparison" },
+                          { key: "six_mark", label: "6 Mark", color: "#ff6584", desc: "Analysis & discussion" },
                         ].map(({ key, label, color, desc }) => (
                           <div key={key} className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
                               <span style={{ background: `${color}22`, color, padding: "4px 12px", borderRadius: "12px", fontSize: "12px", fontWeight: "700" }}>{label}</span>
                               <span style={{ fontSize: "12px", color: textMuted }}>{desc}</span>
                             </div>
-                            <ol style={{ margin: 0, paddingLeft: "20px" }}>
-                              {result.qa[key]?.map((q, i) => (
-                                <li key={i} style={{ marginBottom: "12px", color: text, fontSize: "14px", lineHeight: "1.7" }}>{q}</li>
-                              ))}
-                            </ol>
+                            <ol style={{ margin: 0, paddingLeft: "0", listStyle: "none" }}>
+  {result.qa[key]?.map((item, i) => (
+    <li key={i} style={{ marginBottom: "16px" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "6px" }}>
+        <span style={{ background: `${color}22`, color, padding: "2px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", flexShrink: 0 }}>Q{i + 1}</span>
+        <span style={{ color: text, fontSize: "14px", lineHeight: "1.7", fontWeight: "500" }}>{item.question}</span>
+      </div>
+      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginLeft: "0" }}>
+        <span style={{ background: "#4caf5022", color: "#4caf50", padding: "2px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", flexShrink: 0 }}>Ans</span>
+        <span style={{ color: textMuted, fontSize: "13px", lineHeight: "1.7", fontStyle: "italic" }}>{item.answer}</span>
+      </div>
+    </li>
+  ))}
+</ol>
                           </div>
                         ))}
                       </div>
                     )}
 
                     {activeTab === "Concepts" && (
-                      <div className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
-                        <h3 style={{ margin: "0 0 16px", fontSize: "14px", color: accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>Key Concepts</h3>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                          {result.concepts.map((c, i) => {
-                            const colors = ["#6c63ff", "#ff6584", "#f9a825", "#00bcd4", "#4caf50", "#ff9800", "#e91e63", "#9c27b0"];
-                            const color = colors[i % colors.length];
-                            return (
-                              <motion.span
-                                key={i}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: i * 0.05 }}
-                                whileHover={{ scale: 1.08 }}
-                                style={{ background: `${color}22`, color, border: `1px solid ${color}44`, padding: "8px 18px", borderRadius: "20px", fontSize: "14px", fontWeight: "500" }}
-                              >
-                                {c}
-                              </motion.span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+  <div className="result-card" style={{ background: surface, border: `1px solid ${border}`, borderRadius: "14px", padding: "22px" }}>
+    <h3 style={{ margin: "0 0 6px", fontSize: "14px", color: accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>Key Concepts</h3>
+    <p style={{ fontSize: "12px", color: textMuted, margin: "0 0 16px" }}>Click any concept to get an instant explanation</p>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+      {result.concepts.map((c, i) => {
+        const colors = ["#6c63ff", "#ff6584", "#f9a825", "#00bcd4", "#4caf50", "#ff9800", "#e91e63", "#9c27b0"];
+        const color = colors[i % colors.length];
+        const isLoading = loadingConcept === c;
+        const explanation = conceptExplanation[c];
+        return (
+          <div key={i} style={{ width: "100%" }}>
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={async () => {
+                if (explanation) {
+                  setConceptExplanation(prev => {
+                    const next = { ...prev };
+                    delete next[c];
+                    return next;
+                  });
+                  return;
+                }
+                setLoadingConcept(c);
+                try {
+                  const res = await fetch("http://127.0.0.1:5000/explain-concept", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ concept: c, context: result.summary })
+                  });
+                  const data = await res.json();
+                  setConceptExplanation(prev => ({ ...prev, [c]: data.explanation }));
+                } catch {
+                  setConceptExplanation(prev => ({ ...prev, [c]: "Could not load explanation." }));
+                } finally {
+                  setLoadingConcept(null);
+                }
+              }}
+              style={{ background: `${color}22`, color, border: `1px solid ${color}44`, padding: "8px 18px", borderRadius: "20px", fontSize: "14px", fontWeight: "500", cursor: "pointer", display: "inline-block" }}
+            >
+              {isLoading ? "Loading..." : c} {explanation ? "↑" : "↓"}
+            </motion.span>
+            <AnimatePresence>
+              {explanation && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  style={{ background: `${color}11`, border: `1px solid ${color}33`, borderRadius: "10px", padding: "12px 16px", fontSize: "13px", color: text, lineHeight: "1.7", overflow: "hidden" }}
+                >
+                  {explanation}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {!result && !loading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                style={{ textAlign: "center", padding: "40px", color: textMuted }}
-              >
-                <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚛️</div>
-                <p style={{ fontSize: "15px", margin: "0 0 8px", color: text, fontWeight: "500" }}>Ready to analyse</p>
-                <p style={{ fontSize: "13px", margin: 0 }}>Upload a PDF and click Analyse to get started</p>
-              </motion.div>
-            )}
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5 }}
+    className="empty-state-container"
+    style={{ color: textMuted }}
+  >
+    <div className="pulse-wrapper">
+      <div className="pulse-ring"></div>
+      <div className="pulse-ring"></div>
+      <div className="pulse-ring"></div>
+      <div className="empty-icon">📄</div>
+    </div>
+    
+    <h2 style={{ fontSize: "20px", color: text, marginBottom: "10px", fontWeight: "600" }}>
+      Awaiting Document
+    </h2>
+    <p style={{ fontSize: "14px", maxWidth: "320px", margin: "0 auto", lineHeight: "1.6" }}>
+      Upload a research paper or textbook to generate visual maps and study guides.
+    </p>
+  </motion.div>
+)}
           </div>
         </motion.div>
       )}
