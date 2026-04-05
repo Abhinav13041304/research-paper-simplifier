@@ -1,29 +1,24 @@
-# PaperLens — Research Paper Simplifier
+# PaperLens — AI Study Tool
 
-An AI-powered tool that transforms dense academic papers into 
-clear, interactive explanations through summaries, flowcharts, 
-analogies, and knowledge graphs.
+🔗 **Live Demo:** [paperlens-kappa.vercel.app](https://paperlens-kappa.vercel.app)
+
+An AI-powered tool that transforms any PDF into clear, interactive explanations through summaries, flowcharts, concept maps, and exam questions.
 
 ## Features
-- 3-level plain language summary (Quick / Student / Researcher)
+- 3-level explanation depth — Quick, Student, Researcher
+- Section-by-section breakdown of any document
 - Auto-generated methodology flowcharts
-- Analogy engine — maps concepts to everyday things
-- Interactive knowledge graph of concepts
-- Hover-to-define for every technical term
-- Chat with the paper — ask anything, get grounded answers
-- Section-by-section breakdown
-- Prerequisite detector
-- One-slide summary generator
+- Interactive concept relationship maps
+- Exam questions with answers — 2 mark, 4 mark, 6 mark
+- Click-to-explain concept definitions
+- Drag and drop PDF upload
+- Dark/Light mode
 
 ## Tech Stack
-- **Frontend:** React, Tailwind CSS, Framer Motion, D3.js, Mermaid.js
+- **Frontend:** React, Tailwind CSS, Framer Motion, Mermaid.js
 - **Backend:** Python, Flask, REST API
-- **AI/NLP:** OpenAI API, spaCy, Transformers, LangChain
-- **Database:** PostgreSQL
-- **Deployment:** Vercel (frontend), Render (backend)
+- **AI:** Groq LLaMA API
+- **Deployment:** Vercel (frontend), Railway (backend)
 
 ## Status
-🚧 Active development — started March 2026
-
-## Local Setup
-Coming soon as development progresses.
+✅ Live and deployed — March 2026
