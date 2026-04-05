@@ -184,7 +184,7 @@ export default function DiagramsTab({ result, darkMode }) {
   const handleGetMore = async () => {
     setLoadingMore(true);
     try {
-      const res = await fetch("http://127.0.0.1:5000/more-diagrams", {
+      const res = await fetch("https://research-paper-simplifier-production.up.railway.app/more-diagrams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: result.summary })

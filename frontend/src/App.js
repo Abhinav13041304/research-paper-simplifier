@@ -99,7 +99,7 @@ export default function App() {
     setError(null);
     setResult(null);
     try {
-      const response = await fetch("http://127.0.0.1:5000/upload", { method: "POST", body: formData });
+      const response = await fetch("https://research-paper-simplifier-production.up.railway.app/upload", { method: "POST", body: formData });
       const data = await response.json();
       if (data.error) setError(data.error);
       else { setResult(data); setActiveTab("Summary"); }
@@ -445,7 +445,7 @@ export default function App() {
                 }
                 setLoadingConcept(c);
                 try {
-                  const res = await fetch("http://127.0.0.1:5000/explain-concept", {
+                  const res = await fetch("https://research-paper-simplifier-production.up.railway.app/explain-concept", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ concept: c, context: result.summary })
