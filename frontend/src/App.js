@@ -45,10 +45,6 @@ export default function App() {
   const accent = "#6c63ff";
 
   useEffect(() => {
-    mermaid.initialize({ startOnLoad: false, theme: darkMode ? "dark" : "default", flowchart: { curve: "basis" } });
-  }, [darkMode]);
-
-  useEffect(() => {
     const timer = setTimeout(() => setInitialLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
