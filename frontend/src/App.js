@@ -1,25 +1,8 @@
 import ParticleBackground from "./ParticleBackground";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import mermaid from "mermaid";
 import "./App.css";
 import DiagramsTab from "./DiagramsTab";
-
-mermaid.initialize({ startOnLoad: false, theme: "dark", flowchart: { curve: "basis" } });
-
-function MermaidDiagram({ chart, id }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current && chart) {
-      const cleaned = chart.replace(/```mermaid/g, "").replace(/```/g, "").trim();
-      ref.current.innerHTML = "";
-      mermaid.render(`diagram-${id}-${Date.now()}`, cleaned)
-        .then(({ svg }) => { ref.current.innerHTML = svg; })
-        .catch(() => { ref.current.innerHTML = "<p style='color:#ff6584;font-size:13px'>Could not render diagram.</p>"; });
-    }
-  }, [chart, id]);
-  return <div ref={ref} className="mermaid-container" style={{ width: "100%", overflowX: "auto" }} />;
-}
 
 const TABS = [
   { id: "Summary", icon: "📋" },
