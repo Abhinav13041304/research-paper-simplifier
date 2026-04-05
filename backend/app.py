@@ -8,7 +8,7 @@ from groq import Groq
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://paperlens-kappa.vercel.app", "http://localhost:3000"])
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
